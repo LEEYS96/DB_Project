@@ -1,0 +1,1671 @@
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+#include <sqlca.h>
+#include <sqlda.h>
+#include <sqlcpr.h>
+#include <time.h>
+
+EXEC SQL BEGIN DECLARE SECTION;
+
+#define NAME_LENGTH    30 
+#define ARRAY_LENGTH   20 
+
+char *username = "s15010987";
+char *password = "lsly06020325";
+
+
+/* Declare a host structure tag. */
+/*use when string to int*/
+char stperiod[10];
+char stm_date[15];
+char stgrade[10];
+char stgpa[10];
+char sthour[10];
+char stseat[10];
+int inhour;
+int inseat;
+int th;
+
+
+char *getname;
+char *getdir;
+char *getact;
+char *gettype;
+char *getgenre;
+int indp;
+char *getID;
+char mygrade[10];
+int sdate;
+int myage;
+int inleft;
+/* input movie */
+char inname[30];
+char indir[15];
+int inperiod;
+int inm_date;
+char inact[15];
+int ingrade;
+char inm_type[10];
+double ingpa;
+char ingenre[10];
+char inreact[15];
+int inend;
+/*input theater*/
+char insite[20];
+
+/*input condotion */
+int inconleft;
+
+/*input usergrade*/
+char inusergrade[10];
+int incount;
+/*input timetable */
+char intimesale [10];
+/*input membership */
+char inID[10];
+char inUsername[15];
+char inPW[10];
+char inbirth[10];
+char inphone[12];
+char insex[4];
+
+char inmtitle[30];
+int indateofpurchase;
+int innumberoftheater;
+int inseat;
+int inticket_price;
+char inbranch[20];
+int inmovie_date;
+int inmovie_time;
+
+
+int inleft;
+int insale;
+double inratio;
+
+struct
+{
+    char  m_title[ARRAY_LENGTH][NAME_LENGTH];    
+    char dir_name[ARRAY_LENGTH][NAME_LENGTH];
+    int period [ARRAY_LENGTH];
+    int date [ARRAY_LENGTH];
+    char act[ARRAY_LENGTH][NAME_LENGTH];
+    int grade[ARRAY_LENGTH];
+    char type[ARRAY_LENGTH][NAME_LENGTH];
+    double GPA[ARRAY_LENGTH];
+    char genre[ARRAY_LENGTH][NAME_LENGTH];
+} movie_rec;
+struct
+{
+    int site_num[ARRAY_LENGTH]; 
+    char site[ARRAY_LENGTH][NAME_LENGTH];
+    char tname[ARRAY_LENGTH][NAME_LENGTH];
+} theater_rec;
+struct
+{
+    int  num[ARRAY_LENGTH]; 
+    char csite[ARRAY_LENGTH][NAME_LENGTH];
+    int cnum [ARRAY_LENGTH];
+    char ctype[ARRAY_LENGTH][NAME_LENGTH];
+    int total_sit[ARRAY_LENGTH];
+    int sweet[ARRAY_LENGTH];
+    int normal[ARRAY_LENGTH];
+} cinema_rec;
+struct{
+    char conname[ARRAY_LENGTH][NAME_LENGTH];
+    int consale[ARRAY_LENGTH];
+    int conleft[ARRAY_LENGTH];
+    double conratio[ARRAY_LENGTH];
+} condition_rec;
+struct{
+    char superID[ARRAY_LENGTH][NAME_LENGTH];
+    char name[ARRAY_LENGTH][NAME_LENGTH];
+    char movie[ARRAY_LENGTH][NAME_LENGTH];
+    char branch[ARRAY_LENGTH][NAME_LENGTH];
+} totaluserinfo_rec;
+struct{
+    char um_id[ARRAY_LENGTH][NAME_LENGTH];
+    char um_name[ARRAY_LENGTH][NAME_LENGTH];
+    int um_count[ARRAY_LENGTH];    
+    char um_grade[ARRAY_LENGTH][NAME_LENGTH];
+} usermanage_rec;
+struct{
+    char last[ARRAY_LENGTH][NAME_LENGTH];
+    char redir[ARRAY_LENGTH][NAME_LENGTH];
+    int reperiod[ARRAY_LENGTH];
+    int redate[ARRAY_LENGTH];
+    char react[ARRAY_LENGTH][NAME_LENGTH]; 
+    int regrade[ARRAY_LENGTH];
+    int reGPA[ARRAY_LENGTH];
+    int reenddate[ARRAY_LENGTH];
+    char regenre[ARRAY_LENGTH][NAME_LENGTH];
+} record_rec;
+struct{
+    char ID[ARRAY_LENGTH][NAME_LENGTH];
+    char name[ARRAY_LENGTH][NAME_LENGTH];
+    char PW[ARRAY_LENGTH][NAME_LENGTH];
+    char birth[ARRAY_LENGTH][NAME_LENGTH];
+    char phone[ARRAY_LENGTH][NAME_LENGTH];
+    char sex[ARRAY_LENGTH][NAME_LENGTH];
+} membership_rec;
+struct{
+    int timenumber[ARRAY_LENGTH];
+    char movie_title[ARRAY_LENGTH][NAME_LENGTH];
+    char t_branch[ARRAY_LENGTH][NAME_LENGTH];
+    int moviedate[ARRAY_LENGTH];
+    int movietime[ARRAY_LENGTH];
+    char timesale[ARRAY_LENGTH][NAME_LENGTH];
+} timetable_rec;
+struct{
+    int rnum[ARRAY_LENGTH];
+    char r_ID[ARRAY_LENGTH][NAME_LENGTH];
+    char movietitle[ARRAY_LENGTH][NAME_LENGTH];
+    char branch[ARRAY_LENGTH][NAME_LENGTH];
+    int movie_date[ARRAY_LENGTH];
+    int movie_time[ARRAY_LENGTH];
+    int seat_[ARRAY_LENGTH];
+} reservationDetail_rec;
+struct{
+    char RR_ID[ARRAY_LENGTH][NAME_LENGTH];
+    int dateofpurchase[ARRAY_LENGTH];
+    int numberofTheater[ARRAY_LENGTH];
+    int ticket_price[ARRAY_LENGTH];
+} reservation_rec;
+struct{
+    char P_id[ARRAY_LENGTH][NAME_LENGTH];
+    int P_price[ARRAY_LENGTH];
+} price_rec;
+struct{
+    char P_ID[ARRAY_LENGTH][NAME_LENGTH];
+    char P_genre[ARRAY_LENGTH][NAME_LENGTH];
+    int genreCount[ARRAY_LENGTH];
+} preference_rec;
+struct{
+    char F_ID[ARRAY_LENGTH][NAME_LENGTH];
+    char F_branch[ARRAY_LENGTH][NAME_LENGTH];
+    int branchCount[ARRAY_LENGTH];
+} favoriteTheater_rec;
+
+
+
+
+
+EXEC SQL END DECLARE SECTION;
+
+void print_movie(int n)
+{
+    int i;
+    printf("\nMOVIE TABLE\n");
+    printf("\nTITLE      DIR       PERIOD	 DATE       ACT      GRADE      TYPE      GPA      GENRE ");
+    printf("\n------   --------    ------      --------      --------      --------      -------      ------      ---------   \n");
+
+    for (i = 0; i < n; i++)
+        printf("%s %s %d %d %s %d %s %.1lf %s\n", movie_rec.m_title[i],
+               movie_rec.dir_name[i],movie_rec.period[i], movie_rec.date[i],movie_rec.act[i],movie_rec.grade[i],movie_rec.type[i],movie_rec.GPA[i],movie_rec.genre[i]);
+}
+void print_theater(int n){ 
+    int i;  
+    printf("\nTHEATER TABLE\n");     
+    printf("\nSITE_NUM      SITE      MOVIE");      
+    printf("\n------   -------    ------      \n");
+    
+    for (i = 0; i < n; i++) 
+        printf("%d %s %s\n",theater_rec.site_num[i],theater_rec.site[i],theater_rec.tname[i] );
+
+}
+void print_cinema(int n){
+    int i;
+    printf("\nCINEMA TABLE\n");
+    printf("\nSITE    CINEMA_NUM      TYPE      TOTAL_SIT      SWEET      NORMAL\n");
+    printf("\n------   -------    ------   ------   ------   ------      \n");
+
+    for (i = 0; i < n; i++)
+        printf("%s %d %s %d %d %d\n",cinema_rec.csite[i],cinema_rec.cnum[i],cinema_rec.ctype[i],cinema_rec.total_sit[i],cinema_rec.sweet[i],cinema_rec.normal[i] );
+
+}
+
+void print_condition(int n){
+    int i;
+    printf("\nCONDITION TABLE\n");
+    printf("\nMOVIE    SALE       LEFT     RATIO    \n");
+    printf("\n------   -------    ------   ------   \n");
+
+    for (i = 0; i < n; i++)
+        printf("%s %d %d %.1f\n",condition_rec.conname[i],condition_rec.consale[i],condition_rec.conleft[i],condition_rec.conratio[i]);
+}
+
+void print_totaluserinfo(int n){
+    int i;
+    printf("\nTOTAL USER INFO TABLE\n");
+    printf("\nID       NAME       MOVIE    BRANCH    \n");
+    printf("\n------   -------    ------   ------   \n");
+
+    for (i = 0; i < n; i++)
+        printf("%s %s %s %s\n",totaluserinfo_rec.superID[i],totaluserinfo_rec.name[i],totaluserinfo_rec.movie[i],totaluserinfo_rec.branch[i]);
+}
+
+void print_usermanage(int n){
+    int i;
+    printf("\nUSER MANAGE TABLE\n");
+    printf("\nID       NAME       COUNT    GRADE    \n");
+    printf("\n------   -------    ------   ------   \n");
+
+    for (i = 0; i < n; i++)
+        printf("%s %s %d %s\n",usermanage_rec.um_id[i],usermanage_rec.um_name[i],usermanage_rec.um_count[i],usermanage_rec.um_grade[i]);
+}
+void print_record(int n){
+    int i;
+    printf("\nRECORD  TABLE\n"); 
+    printf("\nTITLE      DIR       PERIOD        DATE       ACT      GRADE       GPA      ENDDATE      GENRE\n "); 
+   printf("\n------   --------    ------      --------      --------      --------      -------      ------      ---------  \n");
+    
+    for (i = 0; i < n; i++) 
+        printf("%s %s %d %d %s %d %d %d %s\n", record_rec.last[i],record_rec.redir[i],record_rec.reperiod[i], record_rec.redate[i],record_rec.react[i],record_rec.regrade[i],record_rec.reGPA[i],record_rec.reenddate[i],record_rec.regenre[i]);
+}
+
+void print_membership(int n){
+    int i;
+    printf("\nMEMBERSHIP TABLE\n");
+    printf("\nID      NAME       PW        BIRTH       PHONE      SEX\n ");
+    printf("\n------   --------    ------      --------      --------      --------     \n");   for (i = 0; i < n; i++)
+        printf("%s %s %s %s %s %s\n", membership_rec.ID[i],membership_rec.name[i],membership_rec.PW[i], membership_rec.birth[i],membership_rec.phone[i],membership_rec.sex[i]);
+}
+
+void print_timetable(int n){
+    int i;
+    printf("\nMOVIE TIMETABLE  TABLE\n");
+    printf("\ TITLE      BRANCH      DATE       TIME       TIMESALE\n ");
+   printf("\n------   --------    ------      ------      --------       \n");
+
+    for (i = 0; i < n; i++)
+        printf("%s %s %d %d %s\n", timetable_rec.movie_title[i],timetable_rec.t_branch[i],timetable_rec.moviedate[i], timetable_rec.movietime[i],timetable_rec.timesale[i]);
+}
+
+void print_reservationDetail(int n){
+    int i;
+    printf("\nRESERVATION DETAIL  TABLE\n");
+    printf("\ ID      MOVIE      BRANCH       DATE       TIME      SEAT\n ");
+   printf("\n------   --------    ------      ------      --------      -------\n");
+
+    for (i = 0; i < n; i++)
+        printf("%s %s %s %d %d %d\n",reservationDetail_rec.r_ID[i], reservationDetail_rec.movietitle[i],reservationDetail_rec.branch[i],reservationDetail_rec.movie_date[i], reservationDetail_rec.movie_time[i],reservationDetail_rec.seat_[i]);
+}
+void print_reservation(int n){
+    int i;
+    printf("\nRESERVATION  TABLE\n");
+    printf("\ ID      PURCHASE    THEATER_NUM       PRICE\n ");
+    printf("\n------   --------    ------      ------      \n");
+
+    for (i = 0; i < n; i++)
+        printf("%s %d %d %d\n",reservation_rec.RR_ID[i], reservation_rec.dateofpurchase[i],reservation_rec.numberofTheater[i],reservation_rec.ticket_price[i]);
+}
+
+void print_price(int n){
+    int i;
+    printf("\nPRICE  TABLE\n");
+    printf("\nID       PRICE       \n");
+    printf("\n------   -------     \n");
+
+    for (i = 0; i < n; i++)
+        printf("%s %d\n",price_rec.P_id[i],price_rec.P_price[i]);
+}
+
+void print_preference(int n){
+    int i;
+    printf("\nPREFERENCE GENRE  TABLE\n");
+    printf("\nID       GENRE      COUNT \n");
+    printf("\n------   -------    ------ \n");
+
+    for (i = 0; i < n; i++)
+        printf("%s %s %d\n",preference_rec.P_ID[i],preference_rec.P_genre[i],preference_rec.genreCount[i]);
+}
+
+void print_favoriteTheater(int n){
+    int i;
+    printf("\nFAVORITE THEATER  TABLE\n");
+    printf("\nID       THEATER      COUNT \n");
+    printf("\n------   -------     ------\n");
+
+    for (i = 0; i < n; i++)
+        printf("%s %s %d\n",favoriteTheater_rec.F_ID[i],favoriteTheater_rec.F_branch[i],favoriteTheater_rec.branchCount[i]);
+}
+
+
+void sql_error(char *msg)
+{
+    EXEC SQL WHENEVER SQLERROR CONTINUE;
+
+    printf("\n%s", msg);
+    printf("\n% .70s \n", sqlca.sqlerrm.sqlerrmc);
+
+    EXEC SQL ROLLBACK WORK RELEASE;
+    exit(EXIT_FAILURE);
+}
+void init(){
+/* Connect to ORACLE. */
+    EXEC SQL WHENEVER SQLERROR DO sql_error("Connect error:");
+
+    EXEC SQL CONNECT :username IDENTIFIED BY :password;
+    printf("\nConnected to ORACLE as user: %s\n", username);
+     EXEC SQL WHENEVER SQLERROR DO sql_error("Oracle error:");
+
+    EXEC SQL DELETE FROM record;
+    EXEC SQL DELETE FROM usermanage;
+    EXEC SQL DELETE FROM totaluserinfo;
+    EXEC SQL DELETE FROM condition;
+    EXEC SQL DELETE FROM cinema;
+    EXEC SQL DELETE FROM theater;
+    EXEC SQL DELETE FROM movie;
+    
+    EXEC SQL INSERT INTO movie VALUES('뷰티인사이드','백종열',14,170601,'한효주',12,'2D',2,'로맨스');
+    EXEC SQL INSERT INTO movie VALUES('변호인','양우석',28,170601,'송강호',15,'2D',5,'드라마');
+    EXEC SQL INSERT INTO movie VALUES('베테랑','류승완',28,170601,'유아인',15,'2D',4,'액션');
+    EXEC SQL INSERT INTO movie VALUES('신비한동물사전','데이빗',21,170601,'에디',12,'3D',3,'판타지');
+    EXEC SQL INSERT INTO movie VALUES('고스트버스터즈','폴페이그',21,170602,'유령',15,'3D',4,'SF');
+    EXEC SQL INSERT INTO movie VALUES('아이언맨','셰인블랙',28,170602,'로봇',15,'3D',5,'SF');
+    EXEC SQL INSERT INTO movie VALUES('라라랜드','다미엔',21,170602,'엠마스톤',15,'2D',4,'로맨스');
+    EXEC SQL INSERT INTO movie VALUES('모아나','존머스커',21,170602,'인디언',0,'2D',3,'드라마');
+    EXEC SQL INSERT INTO movie VALUES('겨울왕국','크리스벅',28,170603,'올라프',0,'3D',4,'SF');
+    EXEC SQL INSERT INTO movie VALUES('메이즈러너','웨스볼',28,170603,'미로',15,'3D',2,'SF');
+    EXEC SQL INSERT INTO movie VALUES('미녀와야수','빌콘돈',21,170603,'미녀',15,'3D',4,'판타지');
+    EXEC SQL INSERT INTO movie VALUES('인턴','낸시',21,170603,'인턴',15,'2D',4,'드라마');
+
+EXEC SQL INSERT INTO theater VALUES(1,'서울','변호인');
+EXEC SQL INSERT INTO theater VALUES(2,'서울','베테랑');
+EXEC SQL INSERT INTO theater VALUES(3,'인천','변호인');
+EXEC SQL INSERT INTO theater VALUES(4,'성남','변호인');
+EXEC SQL INSERT INTO theater VALUES(5,'인천','베테랑');
+EXEC SQL INSERT INTO theater VALUES(6,'성남','신비한동물사전');
+EXEC SQL INSERT INTO theater VALUES(7,'인천','뷰티인사이드');
+EXEC SQL INSERT INTO theater VALUES(8,'서울','모아나');
+EXEC SQL INSERT INTO theater VALUES(9,'인천','겨울왕국');
+EXEC SQL INSERT INTO theater VALUES(10,'성남','인턴');
+EXEC SQL INSERT INTO theater VALUES(11,'성남','메이즈러너');
+EXEC SQL INSERT INTO theater VALUES(12,'서울','인턴');
+
+EXEC SQL INSERT INTO cinema VALUES(1,'서울',1,'2D',45,10,35);
+EXEC SQL INSERT INTO cinema VALUES(2,'서울',2,'2D',45,10,35);
+EXEC SQL INSERT INTO cinema VALUES(3,'인천',1,'2D',45,10,35);
+EXEC SQL INSERT INTO cinema VALUES(4,'성남',1,'2D',45,10,35);
+EXEC SQL INSERT INTO cinema VALUES(5,'성남',2,'3D',45,10,35);
+EXEC SQL INSERT INTO cinema VALUES(6,'서울',3,'2D',45,10,35);
+EXEC SQL INSERT INTO cinema VALUES(7,'인천',2,'3D',45,10,35);
+EXEC SQL INSERT INTO cinema VALUES(8,'인천',3,'2D',45,10,35);
+EXEC SQL INSERT INTO cinema VALUES(9,'서울',4,'2D',45,10,35);
+EXEC SQL INSERT INTO cinema VALUES(10,'성남',3,'2D',45,10,35);
+EXEC SQL INSERT INTO cinema VALUES(11,'성남',4,'3D',45,10,35);
+EXEC SQL INSERT INTO cinema VALUES(12,'인천',4,'3D',45,10,35);
+
+EXEC SQL INSERT INTO condition VALUES('변호인',3,42,6.6);
+EXEC SQL INSERT INTO condition VALUES('뷰티인사이드',1,44,2.2);
+EXEC SQL INSERT INTO condition VALUES('베테랑',2,43,4.4);
+EXEC SQL INSERT INTO condition VALUES('신비한동물사전',1,44,2.2);
+EXEC SQL INSERT INTO condition VALUES('모아나',1,44,2.2);
+EXEC SQL INSERT INTO condition VALUES('인턴',2,43,4.4);
+EXEC SQL INSERT INTO condition VALUES('겨울왕국',1,44,2.2);
+EXEC SQL INSERT INTO condition VALUES('메이즈러너',1,44,2.2);
+EXEC SQL INSERT INTO condition VALUES('아이언맨',0,45,0.0);
+EXEC SQL INSERT INTO condition VALUES('고스트버스터즈',0,45,0.0);
+EXEC SQL INSERT INTO condition VALUES('라라랜드',0,45,0.0);
+EXEC SQL INSERT INTO condition VALUES('미녀와야수',0,45,0.0);
+
+EXEC SQL INSERT INTO totaluserinfo VALUES('dujun','윤두준','인턴','서울');
+EXEC SQL INSERT INTO totaluserinfo VALUES('joy','박수영','변호인','서울');
+EXEC SQL INSERT INTO totaluserinfo VALUES('hana','신보라','베테랑','서울');
+EXEC SQL INSERT INTO totaluserinfo VALUES('jae','박제형','모아나','서울');
+EXEC SQL INSERT INTO totaluserinfo VALUES('mimi','정미미','변호인','인천');
+EXEC SQL INSERT INTO totaluserinfo VALUES('gk','이기광','베테랑','인천');
+EXEC SQL INSERT INTO totaluserinfo VALUES('wendy','손승완','뷰티인사이드','인천');
+EXEC SQL INSERT INTO totaluserinfo VALUES('yoseob','양요섭','겨울왕국','인천');
+EXEC SQL INSERT INTO totaluserinfo VALUES('taeyeon','김태연','변호인','성남');
+EXEC SQL INSERT INTO totaluserinfo VALUES('cw','지창욱','인턴','성남');
+EXEC SQL INSERT INTO totaluserinfo VALUES('eunwoo','차은우','신비한동물사전','성남');
+EXEC SQL INSERT INTO totaluserinfo VALUES('stone','임나영','메이즈러너','성남');
+
+EXEC SQL INSERT INTO usermanage VALUES('dujun','윤두준',14,'vip');
+EXEC SQL INSERT INTO usermanage VALUES('joy','박수영',1,'silver');
+EXEC SQL INSERT INTO usermanage VALUES('hana','신보라',2,'silver');
+EXEC SQL INSERT INTO usermanage VALUES('jae','박제형',4,'silver');
+EXEC SQL INSERT INTO usermanage VALUES('mimi','정미미',1,'silver');
+EXEC SQL INSERT INTO usermanage VALUES('gk','이기광',1,'silver');
+EXEC SQL INSERT INTO usermanage VALUES('wendy','손승완',11,'vip');
+EXEC SQL INSERT INTO usermanage VALUES('yoseob','양요섭',1,'silver');
+EXEC SQL INSERT INTO usermanage VALUES('taeyeon','김태연',1,'silver');
+EXEC SQL INSERT INTO usermanage VALUES('cw','지창욱',1,'silver');
+EXEC SQL INSERT INTO usermanage VALUES('eunwoo','차은우',1,'silver');
+EXEC SQL INSERT INTO usermanage VALUES('stone','임나영',9,'gold');
+
+EXEC SQL INSERT INTO record VALUES('아가씨','박찬욱',14,170301,'김태리',12,4,170315,'드라마');
+EXEC SQL INSERT INTO record VALUES('500일의썸머','마크웹',14,170201,'한효주',12,2,170215,'로맨스');
+EXEC SQL INSERT INTO record VALUES('조작된도시','박광현',21,170403,'지창욱',15,3,170424,'액션');
+EXEC SQL INSERT INTO record VALUES('겟아웃','조던펠레',28,170401,'미국인',15,4,170429,'공포');
+EXEC SQL INSERT INTO record VALUES('보스베이비','톰',21,170101,'아기',0,3,170122,'코미디');
+EXEC SQL INSERT INTO record VALUES('트랜스포머','마이클',21,170301,'메간폭스',12,2,170322,'액션');
+EXEC SQL INSERT INTO record VALUES('눈길','이나정',28,170401,'김새론',15,5,170429,'드라마');
+EXEC SQL INSERT INTO record VALUES('귀향','조정래',28,170301,'강하나',15,5,170329,'드라마');
+EXEC SQL INSERT INTO record VALUES('부산행','연상호',14,161001,'공유',15,3,161015,'스릴러');
+EXEC SQL INSERT INTO record VALUES('아빠는딸','김형협',21,170202,'아빠딸',12,2,170223,'코미디');
+EXEC SQL INSERT INTO record VALUES('가오갤2','제임스건',14,170315,'외계인',12,3,170329,'SF');
+EXEC SQL INSERT INTO record VALUES('로건','맨골드',28,170101,'울버린',19,5,170129,'SF');
+
+EXEC SQL DELETE FROM favoriteTheater;
+EXEC SQL DELETE FROM preference;
+EXEC SQL DELETE FROM price;
+EXEC SQL DELETE FROM reservation;
+EXEC SQL DELETE FROM reservationDetail;
+EXEC SQL DELETE FROM timetable;
+EXEC SQL DELETE FROM membership;
+
+EXEC SQL INSERT INTO membership VALUES('joy','박수영','jo2','960903','01009035555','F');
+EXEC SQL INSERT INTO membership VALUES('hana','신보라','111','930430','01004309999','F');
+EXEC SQL INSERT INTO membership VALUES('mimi','정미미','777','930101','01001017777','F');
+EXEC SQL INSERT INTO membership VALUES('gk','이기광','kk','900330','01003305555','M');
+EXEC SQL INSERT INTO membership VALUES('wendy','손승완','ssw','940221','01002213333','F');
+EXEC SQL INSERT INTO membership VALUES('yoseob','양요섭','yys','900105','01001055555','M');
+EXEC SQL INSERT INTO membership VALUES('taeyeon','김태연','kty','890329','01003298888','F');
+EXEC SQL INSERT INTO membership VALUES('cw','지창욱','king','870705','01007051212','M');
+EXEC SQL INSERT INTO membership VALUES('eunwoo','차은우','astro','970330','01007306666','M');
+EXEC SQL INSERT INTO membership VALUES('stone','임나영','pristin','951218','01012181010','F');
+
+EXEC SQL INSERT INTO timetable VALUES(0,'변호인','서울',170601,09,'조조');
+EXEC SQL INSERT INTO timetable VALUES(1,'베테랑','서울',170601,12,'일반');
+EXEC SQL INSERT INTO timetable VALUES(2,'모아나','서울',170601,13,'일반');
+EXEC SQL INSERT INTO timetable VALUES(3,'인턴','서울',170601,22,'심야');
+EXEC SQL INSERT INTO timetable VALUES(4,'변호인','인천',170601,10,'조조');
+EXEC SQL INSERT INTO timetable VALUES(5,'베테랑','인천',170601,16,'일반');
+EXEC SQL INSERT INTO timetable VALUES(6,'뷰티인사이드','인천',170601,17,'일반');
+EXEC SQL INSERT INTO timetable VALUES(7,'겨울왕국','인천',170601,18,'일반');
+EXEC SQL INSERT INTO timetable VALUES(8,'변호인','성남',170601,11,'일반');
+EXEC SQL INSERT INTO timetable VALUES(9,'인턴','성남',170601,14,'일반');
+EXEC SQL INSERT INTO timetable VALUES(10,'신비한동물사전','성남',170601,20,'일반');
+EXEC SQL INSERT INTO timetable VALUES(11,'메이즈러너','성남',170601,23,'심야');
+
+EXEC SQL INSERT INTO reservationDetail VALUES(1,'joy','변호인','서울',170601,09,5);
+EXEC SQL INSERT INTO reservationDetail VALUES(2,'hana','베테랑','서울',170601,12,9);
+EXEC SQL INSERT INTO reservationDetail VALUES(3,'jae','모아나','서울',170601,13,13);
+EXEC SQL INSERT INTO reservationDetail VALUES(4,'dujun','인턴','서울',170601,14,22);
+EXEC SQL INSERT INTO reservationDetail VALUES(5,'mimi','변호인','인천',170601,10,22);
+EXEC SQL INSERT INTO reservationDetail VALUES(6,'gk','베테랑','인천',170601,16,23);
+EXEC SQL INSERT INTO reservationDetail VALUES(7,'wendy','뷰티인사이드','인천',170601,17,24);
+EXEC SQL INSERT INTO reservationDetail VALUES(8,'yoseob','겨울왕국','인천',170601,18,27);
+EXEC SQL INSERT INTO reservationDetail VALUES(9,'taeyeon','변호인','성남',170601,11,29);
+EXEC SQL INSERT INTO reservationDetail VALUES(10,'cw','인턴','성남',170601,14,31);
+EXEC SQL INSERT INTO reservationDetail VALUES(11,'eunwoo','신비한동물사전','성남',170601,20,33);
+EXEC SQL INSERT INTO reservationDetail VALUES(12,'stone','메이즈러너','성남',170601,23,37);
+
+EXEC SQL INSERT INTO reservation VALUES('joy',170530,1,9000);
+EXEC SQL INSERT INTO reservation VALUES('hana',170530,2,12000);
+EXEC SQL INSERT INTO reservation VALUES('jae',170531,3,9000);
+EXEC SQL INSERT INTO reservation VALUES('dujun',170531,4,9000);
+EXEC SQL INSERT INTO reservation VALUES('mimi',170531,1,6000);
+EXEC SQL INSERT INTO reservation VALUES('gk',170531,1,9000);
+EXEC SQL INSERT INTO reservation VALUES('wendy',170601,3,9000);
+EXEC SQL INSERT INTO reservation VALUES('yoseob',170601,4,9000);
+EXEC SQL INSERT INTO reservation VALUES('taeyeon',170601,1,9000);
+EXEC SQL INSERT INTO reservation VALUES('cw',170601,3,9000);
+EXEC SQL INSERT INTO reservation VALUES('eunwoo',170601,2,9000);
+EXEC SQL INSERT INTO reservation VALUES('stone',170601,4,7000);
+
+EXEC SQL INSERT INTO price VALUES('joy',9000);
+EXEC SQL INSERT INTO price VALUES('hana',12000);
+EXEC SQL INSERT INTO price VALUES('jae',9000);
+EXEC SQL INSERT INTO price VALUES('dujun',9000);
+EXEC SQL INSERT INTO price VALUES('mimi',6000);
+EXEC SQL INSERT INTO price VALUES('gk',9000);
+EXEC SQL INSERT INTO price VALUES('wendy',9000);
+EXEC SQL INSERT INTO price VALUES('yoseob',9000);
+EXEC SQL INSERT INTO price VALUES('taeyeon',9000);
+EXEC SQL INSERT INTO price VALUES('cw',9000);
+EXEC SQL INSERT INTO price VALUES('eunwoo',9000);
+EXEC SQL INSERT INTO price VALUES('stone',7000);
+
+EXEC SQL INSERT INTO preference VALUES('joy','판타지',2);
+EXEC SQL INSERT INTO preference VALUES('hana','로맨스',1);
+EXEC SQL INSERT INTO preference VALUES('jae','SF',6);
+EXEC SQL INSERT INTO preference VALUES('dujun','액션',2);
+EXEC SQL INSERT INTO preference VALUES('mimi','코미디',3);
+EXEC SQL INSERT INTO preference VALUES('gk','공포',1);
+EXEC SQL INSERT INTO preference VALUES('wendy','드라마',2);
+EXEC SQL INSERT INTO preference VALUES('yoseob','SF',1);
+EXEC SQL INSERT INTO preference VALUES('taeyeon','공포',1);
+EXEC SQL INSERT INTO preference VALUES('cw','액션',1);
+EXEC SQL INSERT INTO preference VALUES('eunwoo','로맨스',4);
+EXEC SQL INSERT INTO preference VALUES('stone','드라마',1);
+
+EXEC SQL INSERT INTO favoriteTheater VALUES('joy','성남',2);
+EXEC SQL INSERT INTO favoriteTheater VALUES('hana','인천',1);
+EXEC SQL INSERT INTO favoriteTheater VALUES('jae','서울',5);
+EXEC SQL INSERT INTO favoriteTheater VALUES('dujun','성남',2);
+EXEC SQL INSERT INTO favoriteTheater VALUES('mimi','서울',3);
+EXEC SQL INSERT INTO favoriteTheater VALUES('gk','인천',1);
+EXEC SQL INSERT INTO favoriteTheater VALUES('wendy','서울',2);
+EXEC SQL INSERT INTO favoriteTheater VALUES('yoseob','인천',1);
+EXEC SQL INSERT INTO favoriteTheater VALUES('taeyeon','성남',1);
+EXEC SQL INSERT INTO favoriteTheater VALUES('cw','인천',1);
+EXEC SQL INSERT INTO favoriteTheater VALUES('eunwoo','성남',3);
+EXEC SQL INSERT INTO favoriteTheater VALUES('stone','성남',1);   		
+
+ EXEC SQL COMMIT WORK RELEASE;
+}
+void main()
+{
+    int  num_ret,i;               /* number of rows returned */
+    int mode;
+    int max=0;
+    int menuofm;
+    int menuofu;
+    
+    time_t timer;
+    struct tm *t;
+    int YYMMDD;
+    timer = time(NULL);
+    t=localtime(&timer);
+YYMMDD=(t->tm_year%100)*10000+(t->tm_mon+1)*100+t->tm_mday;
+
+while(1){
+printf("15010932 최다빈, 15010987 이예슬 프로그램 제출\n");    
+printf("모드를 선택하세요.\n");
+printf("1. 사용자 모드 접속\n");
+printf("2. 관리자 모드 접속\n");
+printf("3. 초기화 하기\n");
+printf("4. 종료\n");
+
+scanf("%d",&mode);
+if(mode == 3){
+init();
+printf("초기화 완료\n");
+}
+else if(mode==2){
+
+printf("관리자 메뉴\n");
+printf("1. 영화 삽입\n");
+printf("2. 영화 삭제\n");
+printf("3. 영화 정보 변경\n");
+printf("4. 상영기간 검색\n");
+printf("5. 상영시간 검색\n");
+printf("6. 현재 예매 현황 검색\n");
+printf("7. 상영 유형 별 영화 검색\n");
+printf("8. 상영 등급 별 영화 검색\n");
+printf("9. 회원 등급 검색\n");
+printf("10. 최다 예매 회원 검색\n");
+printf("11. 지난 영화 검색\n");
+printf("12. 영화 별 예매율 검색\n");
+printf("13. 관리자 전체 테이블 보기\n");
+scanf("%d",&menuofm);
+
+
+/* Connect to ORACLE. */
+    EXEC SQL WHENEVER SQLERROR DO sql_error("Connect error:");
+
+    EXEC SQL CONNECT :username IDENTIFIED BY :password;
+    printf("\nConnected to ORACLE as user: %s\n", username);
+ 
+if(menuofm ==1){
+
+printf("추가할 영화 정보를 입력하세요\n");
+printf("입력형식 : 영화 이름, 감독 이름,  상영 기간(14, 21, 28), 개봉일(YYMMDD),배우 이름,등급, 상영 유형(2D, 3D, 4D, IMAX),  평점(0.0), 장르(로맨스, 코미디, 스릴러, 공포,판타지, SF, 액션, 드라마)\n");
+getchar();
+scanf("%s", inname);
+getchar();
+scanf("%s", indir);
+getchar();
+scanf("%s", stperiod);
+getchar();
+scanf("%s",stm_date);
+
+inperiod=atoi(stperiod);
+inm_date=atoi(stm_date);
+
+getchar();
+scanf("%s", inact);	
+getchar();
+scanf("%s", stgrade);
+getchar();
+scanf("%s", inm_type);
+getchar();
+scanf("%s", stgpa);
+getchar();
+scanf("%s", ingenre);
+ingrade=atoi(stgrade);
+ingpa=atof(stgpa);
+
+EXEC SQL insert into movie(mname, dir, period)
+                values(:inname, :indir, :inperiod);
+EXEC SQL UPDATE movie SET m_date = :inm_date WHERE mname = :inname;
+EXEC SQL UPDATE movie SET act = :inact WHERE mname = :inname;
+EXEC SQL UPDATE movie SET grade = :ingrade WHERE mname = :inname;
+EXEC SQL UPDATE movie SET m_type = :inm_type WHERE mname = :inname;
+EXEC SQL UPDATE movie SET gpa = :ingpa WHERE mname = :inname;
+EXEC SQL UPDATE movie SET genre = :ingenre WHERE mname = :inname;
+
+printf("영화 삽입 완료!\n");
+EXEC SQL COMMIT WORK RELEASE;
+}
+
+else if(menuofm==2){
+printf("삭제할 영화 이름을 입력하세요\n");
+getchar();
+scanf("%s", inname);
+
+
+EXEC SQL DELETE FROM movie WHERE mname = :inname;
+EXEC SQL DELETE FROM theater WHERE tname = :inname;
+EXEC SQL DELETE FROM condition WHERE conname = :inname;
+EXEC SQL DELETE FROM totaluserinfo WHERE movie = :inname;
+
+printf("영화 삭제 완료!\n");
+EXEC SQL COMMIT WORK RELEASE;
+}
+
+else if(menuofm==3){
+printf("변경할 영화의 제목을 입력하세요.\n");
+getchar();
+scanf("%s", inname);
+printf("상영 유형을 변경하려면 새 정보를 입력하세요. 입력 형식 : 2D, 3D, 4D, IMAX\n");
+getchar();
+scanf("%s", inm_type);
+
+EXEC SQL UPDATE movie SET m_type = :inm_type WHERE mname = :inname;
+
+printf("영화 정보 수정 완료!\n");
+EXEC SQL COMMIT WORK RELEASE;
+}
+
+else if(menuofm==4){
+
+EXEC SQL DECLARE movie_cursor  CURSOR FOR
+SELECT mname, period, site FROM movie, theater WHERE mname=tname ORDER BY mname ASC;
+
+EXEC SQL OPEN movie_cursor;
+
+EXEC SQL WHENEVER NOT FOUND DO break;
+
+ printf("영화 제목            상영 기간            상영 지점      \n");
+ printf("----------- ------------------------------------------------- \n");
+for(;;){
+EXEC SQL FETCH movie_cursor
+INTO :inname,:inperiod, :inbranch;
+
+printf("%s    %d       %s\n", inname, inperiod, inbranch); 
+} 
+
+ EXEC SQL CLOSE movie_cursor;
+ EXEC SQL COMMIT WORK RELEASE;	
+}
+else if(menuofm==5){
+printf("영화 제목을 입력하세요.\n");
+getchar();
+scanf("%s",inname);
+EXEC SQL DECLARE mt_cursor  CURSOR FOR
+SELECT t_branch, moviedate, movietime, timesale FROM timetable where movie_title=:inname;
+
+EXEC SQL OPEN mt_cursor;
+
+EXEC SQL WHENEVER NOT FOUND DO break;
+
+ printf("극장 위치            상영 날짜          상영 시각       비고\n");
+ printf("----------- --------------------  --------------------- ---------------\n");
+for(;;){
+EXEC SQL FETCH mt_cursor
+INTO :insite,:inmovie_date,:inmovie_time, :intimesale;
+
+printf("%s    %d         %d         %s\n", insite, inmovie_date, inmovie_time, intimesale);
+}
+
+ EXEC SQL CLOSE mt_cursor;
+ EXEC SQL COMMIT WORK RELEASE;
+
+}
+
+else if(menuofm==6){
+printf("현재 영화 예매 현황\n");
+printf("아이디       영화 제목         지점       상영일        시간       좌석     구매일     상영관     가격\n   ");
+printf("----------- -------------------- -------------------- -------------- ------------------- ------------ ------------\n");
+ EXEC SQL DECLARE info_cursor CURSOR FOR
+         SELECT r_ID,movietitle, branch, movie_date, movie_time, seat_,dateofpurchase, numberofTheater, ticket_price
+         FROM reservationDetail, reservation
+         WHERE r_ID = RR_ID;
+ EXEC SQL OPEN info_cursor;
+
+ EXEC SQL WHENEVER NOT FOUND DO break;
+
+ for(;;)
+ {
+ EXEC SQL FETCH info_cursor INTO :inID, :inmtitle,:inbranch, :inmovie_date, :inmovie_time, :inseat, :indateofpurchase, :innumberoftheater, :inticket_price;
+    printf("%s           %s                %s         %d            %d       %d          %d          %d          %d\n",            inID, inmtitle,inbranch, inmovie_date,inmovie_time, inseat, indateofpurchase, innumberoftheater,inticket_price);
+ }
+
+   EXEC SQL CLOSE info_cursor;
+  EXEC SQL COMMIT WORK RELEASE;
+}
+else if(menuofm==7){
+printf("검색 하고 싶은 상영 유형을 입력하세요.(2D, 3D, 4D, IMAX)\n");
+getchar();
+scanf("%s", inm_type);
+
+printf("%s 유형의 영화 상영 현황\n", inm_type);
+printf("영화 제목                 지점      상영 날짜          상영 시간\n");
+printf("-------------------   ----------  --------------   ----------------\n");
+ EXEC SQL DECLARE type_cursor CURSOR FOR
+         SELECT mname, t_branch,moviedate, movietime
+         FROM movie, timetable
+         WHERE m_type=:inm_type and mname=movie_title;
+
+ EXEC SQL OPEN type_cursor;
+
+ EXEC SQL WHENEVER NOT FOUND DO break;
+
+ for(;;)
+ {
+ EXEC SQL FETCH type_cursor INTO  :inmtitle,:inbranch, :inmovie_date, :inmovie_time;
+    printf("%s           %s               %d      %d\n", inmtitle,inbranch, inmovie_date,inmovie_time);
+ }
+
+   EXEC SQL CLOSE type_cursor;
+  EXEC SQL COMMIT WORK RELEASE;
+
+}
+else if(menuofm==8){
+
+printf("나이를 입력하세요.\n");
+getchar();
+scanf("%d",&myage );
+
+printf("볼 수 있는 영화 목록\n");
+printf("        영화 제목             상영 등급(세)\n");
+printf("----------------------- -------------------------\n");
+
+EXEC SQL DECLARE grade_cursor CURSOR FOR
+         SELECT mname,grade
+         FROM movie
+	WHERE grade<=:myage
+         ORDER BY grade ASC;
+
+ EXEC SQL OPEN grade_cursor;
+
+ EXEC SQL WHENEVER NOT FOUND DO break;
+
+ for(;;)
+ {
+ EXEC SQL FETCH grade_cursor INTO  :inmtitle,:ingrade;
+    printf("%s                %d\n", inmtitle,ingrade);
+ }
+
+   EXEC SQL CLOSE grade_cursor;
+  EXEC SQL COMMIT WORK RELEASE;
+}
+else if(menuofm==9){
+printf("검색할 등급을 입력하세요,\n");
+getchar();
+scanf("%s",mygrade);
+
+printf("%s 등급회원 정보\n", mygrade);
+
+printf(" 회원 아이디            회원 이름            회원 등급         핸드폰 번호\n ");
+printf("-----------------------------------------------------------------\n");
+EXEC SQL DECLARE usermanage_cursor CURSOR FOR
+         SELECT um_id, um_name, um_grade,phone
+         FROM usermanage, membership
+         WHERE um_id=ID and um_grade=:mygrade;
+ 
+ EXEC SQL OPEN usermanage_cursor;
+ 
+ EXEC SQL WHENEVER NOT FOUND DO break;
+ 
+ for(;;)
+ {
+ EXEC SQL FETCH usermanage_cursor INTO :inID, :inname,:inusergrade, :inphone;
+    printf("%s      %s      %s        %s\n", inID,inname,inusergrade, inphone);
+ }
+   
+   EXEC SQL CLOSE usermanage_cursor;
+  EXEC SQL COMMIT WORK RELEASE;
+}
+
+else if(menuofm==10){
+printf("최다 예매 회원 출력\n");
+printf("회원 이름             예매 횟수    선호하는 극장  \n");
+printf("------------------------------------------------------------\n");
+
+EXEC SQL DECLARE count_cursor CURSOR FOR
+         SELECT  um_name, um_count, F_branch
+         FROM usermanage, favoriteTheater 
+	 WHERE F_ID=um_id;
+
+ EXEC SQL OPEN count_cursor;
+
+ EXEC SQL WHENEVER NOT FOUND DO break;
+
+ for(;;)
+ {
+ EXEC SQL FETCH count_cursor INTO :inname,:incount, :inbranch;
+    printf("%s      %d          %s\n", inname,incount, inbranch);
+ }
+
+   EXEC SQL CLOSE count_cursor;
+
+EXEC SQL DECLARE max_cursor CURSOR FOR
+         SELECT  um_name
+         FROM usermanage
+         WHERE um_count =(select max(um_count) FROM usermanage);
+
+ EXEC SQL OPEN max_cursor;
+
+ EXEC SQL WHENEVER NOT FOUND DO break;
+
+ for(;;)
+ {
+ EXEC SQL FETCH max_cursor INTO :inname;
+    printf("최다 예매 회원은 %s입니다. \n\n\n", inname);
+ }
+
+   EXEC SQL CLOSE max_cursor;
+printf("등급 별 총 예매 횟수\n");
+printf("등급                    총 예매 횟수\n");
+printf("----------------------------------------------------\n");
+EXEC SQL DECLARE group_cursor CURSOR FOR
+         SELECT  um_grade,sum(um_count)
+         FROM usermanage
+         GROUP BY um_grade HAVING COUNT(*)>0;
+
+ EXEC SQL OPEN group_cursor;
+
+ EXEC SQL WHENEVER NOT FOUND DO break;
+
+ for(;;)
+ {
+ EXEC SQL FETCH group_cursor INTO :inusergrade,:incount;
+    printf("%s                             %d         \n", inusergrade,incount);
+ }
+
+   EXEC SQL CLOSE group_cursor;
+
+
+  EXEC SQL COMMIT WORK RELEASE;
+
+}
+
+else if(menuofm==11){
+printf("날짜를 입력하면 그 날짜 이전에 개봉했던 영화의 정보를 알 수 있습니다.\n");
+printf("날짜를 양식에 맞게 입력하세요.(YYMMDD)\n");
+scanf("%d",&sdate);
+
+printf("%d 이전 개봉 영화 정보\n",sdate);
+printf("영화제목       감독         상영 기간         개봉 날짜      상영 졸료일\n");
+printf("-------------------------------------------------------------------\n");
+
+EXEC SQL DECLARE last_cursor CURSOR FOR
+         SELECT  last, redir,reperiod, redate, reenddate
+         FROM record
+	 WHERE redate<:sdate
+	 order by redate ASC; 
+
+ EXEC SQL OPEN last_cursor;
+
+ EXEC SQL WHENEVER NOT FOUND DO break;
+
+ for(;;)
+ {
+ EXEC SQL FETCH last_cursor INTO :inname,:indir, :inperiod, :inm_date, :inend;
+    printf("%s       %s        %d         %d           %d\n",inname,indir, inperiod, inm_date, inend );
+ }
+
+   EXEC SQL CLOSE last_cursor;
+  EXEC SQL COMMIT WORK RELEASE;
+
+}
+else if(menuofm==12){
+printf("영화별 예매율 검색\n");
+printf("영화 제목         전체 좌석      팔린 좌석      예매율   \n");
+printf("----------------------------------------------------------\n");
+
+EXEC SQL DECLARE percent_cursor CURSOR FOR
+         SELECT  conname,conleft, consale, conratio
+         FROM condition ;
+
+ EXEC SQL OPEN percent_cursor;
+
+ EXEC SQL WHENEVER NOT FOUND DO break;
+
+ for(;;)
+{ 
+EXEC SQL FETCH percent_cursor INTO :inname, :inleft, :insale, :inratio;
+    printf("%s       %d        %d         %.1lf\n",inname,inleft+insale, insale, inratio);
+ }
+
+   EXEC SQL CLOSE percent_cursor;
+
+EXEC SQL DECLARE high_cursor CURSOR FOR
+         SELECT  conname, conratio
+         FROM condition 
+	WHERE conratio =(select max(conratio) FROM condition);
+
+ EXEC SQL OPEN high_cursor;
+
+ EXEC SQL WHENEVER NOT FOUND DO break;
+
+ for(;;)
+{
+EXEC SQL FETCH high_cursor INTO :inname, :inratio;
+    printf("사람들이 가장 많이 보는 영화는 %s, 예매율은   %.1lf입니다.\n",inname, inratio);
+ }
+
+   EXEC SQL CLOSE high_cursor;
+ 
+ EXEC SQL COMMIT WORK RELEASE;
+
+}
+else if(menuofm == 13){
+EXEC SQL WHENEVER SQLERROR DO sql_error("Oracle error:");  
+/* Declare a cursor for the FETCH. */
+    EXEC SQL DECLARE c1 CURSOR FOR
+        SELECT * FROM movie;
+    EXEC SQL OPEN c1;
+
+
+/* Initialize the number of rows. */
+    num_ret = 0;
+    i = 0;
+ 
+    printf("Running Query: SELECT * FROM movie \n");
+
+/* Array fetch loop - ends when NOT FOUND becomes true. */
+    EXEC SQL WHENEVER NOT FOUND DO break;
+
+    for (;;)
+    {
+        EXEC SQL FETCH c1 INTO :movie_rec;
+
+/* Print however many rows were returned. */
+        print_movie(sqlca.sqlerrd[2] - num_ret);
+        num_ret = sqlca.sqlerrd[2];        /* Reset the number. */
+	++i;   
+ }
+
+/* Print remaining rows from last fetch, if any.*/ 
+    if ((sqlca.sqlerrd[2] - num_ret) > 0)
+        print_movie(sqlca.sqlerrd[2] - num_ret);
+
+    EXEC SQL CLOSE c1;
+   
+    EXEC SQL DECLARE c2 CURSOR FOR
+        SELECT * FROM theater;
+    EXEC SQL OPEN c2;
+
+
+/* Initialize the number of rows.*/ 
+    num_ret = 0;
+    i = 0;
+
+    printf("Running Query: SELECT * FROM theater \n");
+
+/* Array fetch loop - ends when NOT FOUND becomes true. */
+    EXEC SQL WHENEVER NOT FOUND DO break;
+
+    for (;;)
+    {
+        EXEC SQL FETCH c2 INTO :theater_rec;
+
+/* Print however many rows were returned. */
+        print_theater(sqlca.sqlerrd[2] - num_ret);
+        num_ret = sqlca.sqlerrd[2];        /* Reset the number. */
+	++i;   
+ }
+
+/* Print remaining rows from last fetch, if any. */
+    if ((sqlca.sqlerrd[2] - num_ret) > 0)
+        print_theater(sqlca.sqlerrd[2] - num_ret);
+
+    EXEC SQL CLOSE c2;
+
+    EXEC SQL DECLARE c3 CURSOR FOR
+        SELECT * FROM cinema;
+    EXEC SQL OPEN c3;
+
+
+/* Initialize the number of rows.*/
+    num_ret = 0;
+    i = 0;
+
+    printf("Running Query: SELECT * FROM cinema\n");
+
+/* Array fetch loop - ends when NOT FOUND becomes true. */
+    EXEC SQL WHENEVER NOT FOUND DO break;
+
+    for (;;)
+    {
+        EXEC SQL FETCH c3 INTO :cinema_rec;
+
+/* Print however many rows were returned. */
+        print_cinema(sqlca.sqlerrd[2] - num_ret);
+        num_ret = sqlca.sqlerrd[2];        /* Reset the number. */
+	++i;   
+ }
+
+/* Print remaining rows from last fetch, if any. */
+    if ((sqlca.sqlerrd[2] - num_ret) > 0)
+        print_cinema(sqlca.sqlerrd[2] - num_ret);
+
+    EXEC SQL CLOSE c3;
+
+    EXEC SQL DECLARE c4 CURSOR FOR
+        SELECT * FROM condition;
+    EXEC SQL OPEN c4;
+
+
+/* Initialize the number of rows.*/
+    num_ret = 0;
+    i = 0;
+
+    printf("Running Query: SELECT * FROM condition\n");
+
+/* Array fetch loop - ends when NOT FOUND becomes true. */
+    EXEC SQL WHENEVER NOT FOUND DO break;
+
+    for (;;)
+    {
+        EXEC SQL FETCH c4 INTO :condition_rec;
+
+/* Print however many rows were returned. */
+        print_condition(sqlca.sqlerrd[2] - num_ret);
+        num_ret = sqlca.sqlerrd[2];        /* Reset the number. */
+	++i;   
+ }
+
+/* Print remaining rows from last fetch, if any. */
+    if ((sqlca.sqlerrd[2] - num_ret) > 0)
+        print_condition(sqlca.sqlerrd[2] - num_ret);
+
+    EXEC SQL CLOSE c4;
+
+
+    EXEC SQL DECLARE c5 CURSOR FOR
+        SELECT * FROM totaluserinfo;
+    EXEC SQL OPEN c5;
+
+
+/* Initialize the number of rows.*/
+    num_ret = 0;
+    i = 0;
+
+    printf("Running Query: SELECT * FROM totaluserinfo\n");
+
+/* Array fetch loop - ends when NOT FOUND becomes true. */
+    EXEC SQL WHENEVER NOT FOUND DO break;
+
+    for (;;)
+    {
+        EXEC SQL FETCH c5 INTO :totaluserinfo_rec;
+
+/* Print however many rows were returned. */
+        print_totaluserinfo(sqlca.sqlerrd[2] - num_ret);
+        num_ret = sqlca.sqlerrd[2];        /* Reset the number. */
+	++i;
+    }
+
+/* Print remaining rows from last fetch, if any. */
+    if ((sqlca.sqlerrd[2] - num_ret) > 0)
+        print_totaluserinfo(sqlca.sqlerrd[2] - num_ret);
+
+    EXEC SQL CLOSE c5;
+ 
+    EXEC SQL DECLARE c6 CURSOR FOR
+        SELECT * FROM usermanage;
+    EXEC SQL OPEN c6;
+
+
+/* Initialize the number of rows.*/
+    num_ret = 0;
+    i = 0;
+
+    printf("Running Query: SELECT * FROM usermanage\n");
+
+/* Array fetch loop - ends when NOT FOUND becomes true. */
+    EXEC SQL WHENEVER NOT FOUND DO break;
+
+    for (;;)
+    {
+        EXEC SQL FETCH c6 INTO :usermanage_rec;
+
+/* Print however many rows were returned. */
+        print_usermanage(sqlca.sqlerrd[2] - num_ret);
+        num_ret = sqlca.sqlerrd[2];        /* Reset the number. */
+        ++i;
+    }
+
+/* Print remaining rows from last fetch, if any. */
+    if ((sqlca.sqlerrd[2] - num_ret) > 0)
+        print_usermanage(sqlca.sqlerrd[2] - num_ret);
+
+    EXEC SQL CLOSE c6;
+
+    EXEC SQL DECLARE c7 CURSOR FOR
+        SELECT * FROM record;
+    EXEC SQL OPEN c7;
+
+
+/* Initialize the number of rows.*/
+    num_ret = 0;
+    i = 0;
+
+    printf("Running Query: SELECT * FROM RECORD\n");
+
+/* Array fetch loop - ends when NOT FOUND becomes true. */
+    EXEC SQL WHENEVER NOT FOUND DO break;
+
+    for (;;)
+    {
+        EXEC SQL FETCH c7 INTO :record_rec;
+
+/* Print however many rows were returned. */
+        print_record(sqlca.sqlerrd[2] - num_ret);
+        num_ret = sqlca.sqlerrd[2];        /* Reset the number. */
+  ++i;
+    }
+
+/* Print remaining rows from last fetch, if any. */
+    if ((sqlca.sqlerrd[2] - num_ret) > 0)
+        print_record(sqlca.sqlerrd[2] - num_ret);
+
+    EXEC SQL CLOSE c7;
+	}
+}
+
+else if(mode==1){
+
+printf("사용자 메뉴\n");
+printf("1. 예매\n");
+printf("2. 예매 취소\n");
+printf("3. 예매 정보 변경\n");
+printf("4. 현재 예매 현황 검색\n");
+printf("5. 현재 상영 영화  검색\n");
+printf("6. 극장별 상영 영화 시간표 검색\n");
+printf("7. 주연 배우  검색\n");
+printf("8. 장르  검색\n");
+printf("9. 사용자 전체 테이블 검색\n");
+scanf("%d",&menuofu);
+
+
+/* Connect to ORACLE. */
+    EXEC SQL WHENEVER SQLERROR DO sql_error("Connect error:");
+
+    EXEC SQL CONNECT :username IDENTIFIED BY :password;
+    printf("\nConnected to ORACLE as user: %s\n", username);
+
+
+if(menuofu ==1){
+EXEC SQL DECLARE viewtable_cursor  CURSOR FOR
+SELECT rnum,r_ID FROM reservationDetail;
+
+EXEC SQL OPEN viewtable_cursor;
+
+EXEC SQL WHENEVER NOT FOUND DO break;
+
+ printf("예매 번호         아이디      \n");
+ printf("----------- --------------------  ------------------- ---------------\n");
+for(;;){
+EXEC SQL FETCH viewtable_cursor
+INTO :ingrade, :inID;
+
+printf("%d          %s \n",ingrade, inID);
+if(max<ingrade)max=ingrade;
+}
+printf("현재 예매 번호: %d\n", max);
+
+ EXEC SQL CLOSE viewtable_cursor;
+
+EXEC SQL DECLARE view_cursor  CURSOR FOR
+SELECT movie_title,t_branch, moviedate, movietime FROM timetable;
+
+EXEC SQL OPEN view_cursor;
+
+EXEC SQL WHENEVER NOT FOUND DO break;
+
+ printf("영화 제목         극장 위치            상영 날짜          상영 시각       \n");
+ printf("----------- --------------------  ------------------- ---------------\n");
+for(;;){
+EXEC SQL FETCH view_cursor
+INTO :inname,:insite,:inmovie_date,:inmovie_time;
+
+printf("%s       %s           %d         %d\n", inname,insite, inmovie_date, inmovie_time);
+}
+
+ EXEC SQL CLOSE view_cursor;
+
+
+printf("예매 정보를 입력하세요\n");
+printf("입력형식 : ID, 영화제목,극장 위치, 상영 날짜, 상영 시각, 좌석번호(1~45)\n");
+getchar();
+scanf("%s", inID);
+getchar();
+scanf("%s", inname);
+getchar();
+scanf("%s", insite);
+getchar();
+scanf("%s", stm_date);
+getchar();
+scanf("%s", sthour);
+getchar();
+scanf("%s", stseat);
+getchar();
+inm_date=atoi(stm_date);
+inhour=atoi(sthour);
+inseat=atoi(stseat);
+
+th=max+1;
+printf("예매 번호: %d, ", th);
+EXEC SQL insert into reservationDetail(rnum,r_ID,movietitle,branch,movie_date,movie_time,seat_)
+                values(:th,:inID, :inname,:insite,:inm_date, :inhour,:inseat);
+
+printf("예매 완료!\n");
+
+EXEC SQL COMMIT WORK RELEASE;
+}
+
+
+else if(menuofu==2){
+printf("삭제할 회원 아이디를 입력하세요\n");
+getchar();
+scanf("%s", inID);
+
+
+EXEC SQL DELETE FROM reservation WHERE RR_ID = :inID;
+EXEC SQL DELETE FROM reservationDetail  WHERE r_ID = :inID;
+
+printf("예매 내역 삭제 완료!\n");
+EXEC SQL COMMIT WORK RELEASE;
+}
+
+else if(menuofu==3){
+printf("변경할 회원의 아이디를 입력하세요.\n");
+getchar();
+scanf("%s", inID);
+printf("좌석을 변경하려면 새 정보를 입력하세요. 입력 형식 :1-45 \n");
+getchar();
+scanf("%s", stseat);
+inseat=atoi(stseat);
+
+EXEC SQL UPDATE reservationDetail SET seat_ = :inseat WHERE r_ID = :inID;
+
+printf("예매 내역 수정 완료!\n");
+EXEC SQL COMMIT WORK RELEASE;
+}
+else if(menuofu==4){
+printf("나의 아이디를 입력하세요.\n");
+scanf("%s", inID);
+printf("나의  영화 예매 현황\n");
+printf("아이디       영화 제목         지점       상영일        시간       좌석     구매일     상영관     가격\n   ");
+printf("----------- -------------------- -------------------- -------------- ------------------- ------------ ------------\n");
+ EXEC SQL DECLARE myinfo_cursor CURSOR FOR
+         SELECT r_ID,movietitle, branch, movie_date, movie_time, seat_,dateofpurchase, numberofTheater, ticket_price 
+	 FROM reservationDetail, reservation
+	 WHERE r_ID = RR_ID and r_ID=:inID;
+ EXEC SQL OPEN myinfo_cursor;
+
+ EXEC SQL WHENEVER NOT FOUND DO break;
+
+ for(;;)  
+ {   
+ EXEC SQL FETCH myinfo_cursor INTO :inID, :inmtitle,:inbranch, :inmovie_date, :inmovie_time, :inseat, :indateofpurchase, :innumberoftheater, :inticket_price;
+    printf("%s           %s                %s         %d            %d       %d          %d          %d          %d\n",            inID, inmtitle,inbranch, inmovie_date,inmovie_time, inseat, indateofpurchase, innumberoftheater,inticket_price);  
+ }
+
+   EXEC SQL CLOSE myinfo_cursor;
+  EXEC SQL COMMIT WORK RELEASE; 
+}
+
+else if(menuofu==5){
+printf("현재 상영 영화 현황\n");
+EXEC SQL DECLARE running_cursor CURSOR FOR
+         SELECT tname, site,m_date
+         FROM theater, movie
+	 WHERE tname=mname;
+EXEC SQL OPEN running_cursor;
+
+ EXEC SQL WHENEVER NOT FOUND DO break;
+printf("         영화 제목                    상영 지점                      개봉일\n");
+printf("------------------------   ------------------------------ ----------------------------------\n");
+ for(;;)
+ {
+EXEC SQL FETCH running_cursor INTO :inname, :inbranch, :inleft;
+printf("%s             %s           %d\n", inname, inbranch, inleft);
+}
+ EXEC SQL CLOSE running_cursor;
+  EXEC SQL COMMIT WORK RELEASE;
+}
+else if(menuofu==6){
+
+printf("지점을 입력하세요. (서울, 인천, 성남)\n");
+getchar();
+scanf("%s",inbranch);
+printf("%s의 상영 시간표\n", inbranch);
+
+EXEC SQL DECLARE tt_cursor  CURSOR FOR
+SELECT movie_title, moviedate, movietime, timesale FROM timetable WHERE t_branch =: inbranch;
+printf("     영화 제목                     상영 날짜               상영 시간               비고\n");
+printf("---------------------    ---------------------   ------------------    ---------------\n");
+
+EXEC SQL OPEN tt_cursor;
+
+ EXEC SQL WHENEVER NOT FOUND DO break;
+
+ for(;;)
+{ EXEC SQL FETCH tt_cursor INTO :inmtitle, :inmovie_date, :inmovie_time,:intimesale;
+printf("%s           %d                %d         %s\n",inmtitle, inmovie_date,inmovie_time,intimesale);
+
+}
+
+ EXEC SQL CLOSE tt_cursor;
+  EXEC SQL COMMIT WORK RELEASE;
+
+}
+else if(menuofu==7){
+printf("검색 가능 배우 목록\n");
+printf("배우\n");
+printf("-----------------------\n");
+
+EXEC SQL DECLARE searchact_cursor  CURSOR FOR
+		SELECT DISTINCT act
+	        FROM  movie
+GROUP BY act HAVING COUNT(*)>0;  
+EXEC SQL OPEN searchact_cursor;
+
+ EXEC SQL WHENEVER NOT FOUND DO break;
+
+ for(;;)
+{ EXEC SQL FETCH searchact_cursor INTO :inact;
+printf("%s  \n",inact);
+}
+
+ EXEC SQL CLOSE searchact_cursor;
+
+EXEC SQL DECLARE searchreact_cursor  CURSOR FOR
+                SELECT react
+                FROM record
+GROUP BY react HAVING COUNT(*)>0;
+EXEC SQL OPEN searchreact_cursor;
+
+ EXEC SQL WHENEVER NOT FOUND DO break;
+
+ for(;;)
+{ EXEC SQL FETCH searchreact_cursor INTO :inreact;
+printf("%s  \n", inreact);
+}
+
+ EXEC SQL CLOSE searchreact_cursor;
+
+printf("위 목록에 있는 배우 이름을 검색하세요.\n");
+getchar();
+scanf("%s", inact);
+
+EXEC SQL DECLARE realsearch_cursor  CURSOR FOR
+                SELECT mname
+                FROM  movie
+		WHERE act=:inact;       
+EXEC SQL OPEN realsearch_cursor;
+
+
+ for(;;)
+{ EXEC SQL FETCH realsearch_cursor INTO :inname;
+printf("%s          예매 가능\n",inname);
+}
+
+ EXEC SQL CLOSE realsearch_cursor;
+
+EXEC SQL DECLARE lastsearch_cursor  CURSOR FOR
+                SELECT last
+                FROM  record
+                WHERE react=:inact;       
+EXEC SQL OPEN lastsearch_cursor;
+
+ EXEC SQL WHENEVER NOT FOUND DO break;
+
+ for(;;)
+{ EXEC SQL FETCH lastsearch_cursor INTO :inname;
+printf("%s          예매 불가 \n",inname);
+}
+
+ EXEC SQL CLOSE lastsearch_cursor;
+EXEC SQL COMMIT WORK RELEASE;
+
+
+}
+else if(menuofu==8){
+printf("장르를 검색하세요.(판타지, 공포, 로맨스, 드라마, 액션, SF, 코미디)\n");
+getchar();
+scanf("%s", ingenre);
+printf("영화 제목         상영 등급           상영 유형\n");
+printf("------------------------------------------------------------------\n");
+EXEC SQL DECLARE searchg_cursor  CURSOR FOR
+                SELECT mname, grade, m_type
+                FROM  movie
+                WHERE genre=:ingenre;
+EXEC SQL OPEN searchg_cursor;
+
+ EXEC SQL WHENEVER NOT FOUND DO break;
+
+ for(;;)
+{ EXEC SQL FETCH searchg_cursor INTO :inname,:ingrade, :inm_type;
+printf("%s       %d          %s \n",inname, ingrade, inm_type);
+}
+
+ EXEC SQL CLOSE searchg_cursor;
+EXEC SQL COMMIT WORK RELEASE;
+
+}
+else if(menuofu==9){
+EXEC SQL WHENEVER SQLERROR DO sql_error("Oracle error:");
+
+/* Declare a cursor for the FETCH. */
+    EXEC SQL DECLARE c8 CURSOR FOR
+        SELECT * FROM membership;
+    EXEC SQL OPEN c8;
+
+
+/* Initialize the number of rows. */
+    num_ret = 0;
+    i = 0;
+
+    printf("Running Query: SELECT * FROM membership \n");
+
+/* Array fetch loop - ends when NOT FOUND becomes true. */
+    EXEC SQL WHENEVER NOT FOUND DO break;
+
+    for (;;)
+    {
+        EXEC SQL FETCH c8 INTO :membership_rec;
+/* Print however many rows were returned. */
+        print_membership(sqlca.sqlerrd[2] - num_ret);
+        num_ret = sqlca.sqlerrd[2];        /* Reset the number. */
+	++i; 
+    }
+
+
+    if ((sqlca.sqlerrd[2] - num_ret) > 0)
+        print_membership(sqlca.sqlerrd[2] - num_ret);
+
+    EXEC SQL CLOSE c8;
+
+/* Declare a cursor for the FETCH. */
+    EXEC SQL DECLARE c9 CURSOR FOR
+        SELECT * FROM timetable;
+    EXEC SQL OPEN c9;
+
+
+/* Initialize the number of rows. */
+    num_ret = 0;
+    i = 0;
+
+    printf("Running Query: SELECT * FROM timetable \n");
+
+/* Array fetch loop - ends when NOT FOUND becomes true. */
+    EXEC SQL WHENEVER NOT FOUND DO break;
+
+    for (;;)
+    {
+        EXEC SQL FETCH c9 INTO :timetable_rec;
+/* Print however many rows were returned. */
+        print_timetable(sqlca.sqlerrd[2] - num_ret);
+        num_ret = sqlca.sqlerrd[2];        /* Reset the number. */
+     ++i;
+    }
+
+    if ((sqlca.sqlerrd[2] - num_ret) > 0)
+        print_timetable(sqlca.sqlerrd[2] - num_ret);
+
+    EXEC SQL CLOSE c9;
+
+/* Declare a cursor for the FETCH. */
+    EXEC SQL DECLARE c10 CURSOR FOR
+        SELECT * FROM reservationDetail;
+    EXEC SQL OPEN c10;
+
+
+/* Initialize the number of rows. */
+    num_ret = 0;
+    i = 0;
+
+    printf("Running Query: SELECT * FROM ReservationDetail \n");
+
+/* Array fetch loop - ends when NOT FOUND becomes true. */
+    EXEC SQL WHENEVER NOT FOUND DO break;
+
+    for (;;)
+    {
+        EXEC SQL FETCH c10 INTO :reservationDetail_rec;
+/* Print however many rows were returned. */
+        print_reservationDetail(sqlca.sqlerrd[2] - num_ret);
+        num_ret = sqlca.sqlerrd[2];        /* Reset the number. */
+     ++i;
+    }
+
+    if ((sqlca.sqlerrd[2] - num_ret) > 0)
+        print_reservationDetail(sqlca.sqlerrd[2] - num_ret);
+
+    EXEC SQL CLOSE c10;
+
+/* Declare a cursor for the FETCH. */
+    EXEC SQL DECLARE c11 CURSOR FOR
+        SELECT * FROM reservation;
+    EXEC SQL OPEN c11;
+
+
+/* Initialize the number of rows. */
+    num_ret = 0;
+    i = 0;
+
+    printf("Running Query: SELECT * FROM Reservation \n");
+
+/* Array fetch loop - ends when NOT FOUND becomes true. */
+    EXEC SQL WHENEVER NOT FOUND DO break;
+
+    for (;;)
+    {
+        EXEC SQL FETCH c11 INTO :reservation_rec;
+/* Print however many rows were returned. */
+        print_reservation(sqlca.sqlerrd[2] - num_ret);
+        num_ret = sqlca.sqlerrd[2];        /* Reset the number. */
+     ++i;
+    }
+
+
+    if ((sqlca.sqlerrd[2] - num_ret) > 0)
+        print_reservation(sqlca.sqlerrd[2] - num_ret);
+
+    EXEC SQL CLOSE c11;
+
+
+/* Declare a cursor for the FETCH. */
+    EXEC SQL DECLARE c12 CURSOR FOR
+        SELECT * FROM price;
+    EXEC SQL OPEN c12;
+
+
+/* Initialize the number of rows. */
+    num_ret = 0;
+    i = 0;
+
+    printf("Running Query: SELECT * FROM price \n");
+
+/* Array fetch loop - ends when NOT FOUND becomes true. */
+    EXEC SQL WHENEVER NOT FOUND DO break;
+    for (;;)
+    {  	 
+        EXEC SQL FETCH c12 INTO :price_rec;
+/* Print however many rows were returned. */   
+	print_price(sqlca.sqlerrd[2] - num_ret);
+        num_ret = sqlca.sqlerrd[2];        /* Reset the number. */
+     ++i;
+    }
+    if ((sqlca.sqlerrd[2] - num_ret) > 0)
+        print_price(sqlca.sqlerrd[2] - num_ret);
+
+    EXEC SQL CLOSE c12;
+
+/* Declare a cursor for the FETCH. */
+    EXEC SQL DECLARE c13 CURSOR FOR
+        SELECT * FROM preference;
+    EXEC SQL OPEN c13;
+
+
+/* Initialize the number of rows. */
+    num_ret = 0;
+    i = 0;
+
+    printf("Running Query: SELECT * FROM preference \n");
+
+/* Array fetch loop - ends when NOT FOUND becomes true. */
+    EXEC SQL WHENEVER NOT FOUND DO break;
+
+    for (;;)
+    {
+        EXEC SQL FETCH c13 INTO :preference_rec;
+/* Print however many rows were returned. */
+        print_preference(sqlca.sqlerrd[2] - num_ret);
+        num_ret = sqlca.sqlerrd[2];        /* Reset the number. */
+     ++i;
+    }
+
+    if ((sqlca.sqlerrd[2] - num_ret) > 0)
+        print_preference(sqlca.sqlerrd[2] - num_ret);
+
+    EXEC SQL CLOSE c13;
+
+/* Declare a cursor for the FETCH. */
+    EXEC SQL DECLARE c14 CURSOR FOR
+        SELECT * FROM favoriteTheater;
+    EXEC SQL OPEN c14;
+
+
+/* Initialize the number of rows. */
+    num_ret = 0;
+    i = 0;
+
+    printf("Running Query: SELECT * FROM favorite Theater\n");
+EXEC SQL WHENEVER NOT FOUND DO break;
+for(;;){
+	EXEC SQL FETCH c14 INTO :favoriteTheater_rec;
+        print_favoriteTheater(sqlca.sqlerrd[2] - num_ret);
+        num_ret = sqlca.sqlerrd[2];        /* Reset the number. */
+     ++i;
+    }
+
+    if ((sqlca.sqlerrd[2] - num_ret) > 0)
+        print_favoriteTheater(sqlca.sqlerrd[2] - num_ret);
+
+    EXEC SQL CLOSE c14;
+
+}
+}
+
+ else { printf("\종료\n\n\n");
+	return;
+}
+}
+/* Disconnect from the database. */
+    EXEC SQL COMMIT WORK RELEASE;
+    exit(EXIT_SUCCESS);
+}
+
+
